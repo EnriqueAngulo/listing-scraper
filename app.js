@@ -2,7 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const db = require('./db/db');
 const emailer = require('./lib/emailer');
-const fs = require('fs');
+//const fs = require('fs');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -15,12 +15,6 @@ const createListing = (count, title, price, link, dateRetrieved) => ({
   link,
   dateRetrieved,
 });
-
-const logListing = (listing) => {
-  console.log('\n', JSON.stringify(listing));
-};
-
-console.log(process.env.BASE_URL);
 
 const createEmailHtml = (newListing) => {
   let listing = '';
@@ -36,20 +30,12 @@ async function scrapeCraigslist() {
   const baseUrl = process.env.BASE_URL;
   const pagesToScrape = 3;
 
-  console.log(baseUrl);
-
   for (let page = 0; page < pagesToScrape; page++) {
     const url = `${baseUrl}~list~${page}~0`;
 
     try {
       const response = await axios.get(url);
       const $ = cheerio.load(response.data);
-
-      let records = 0;
-
-      // let html = $.html();
-      // //save html to file
-      // fs.writeFileSync('test.html', html);
 
       $('li').each((index, element) => {
         const count = index;
@@ -62,12 +48,7 @@ async function scrapeCraigslist() {
         if (title !== '') {
           db.insertListing(count, title, price, link, dateRetrieved);
         }
-
-        records++;
-        logListing(listing);
       });
-
-      console.log(records);
     } catch (error) {
       console.error(`Error scraping page ${page}: ${error.message}`);
     }
