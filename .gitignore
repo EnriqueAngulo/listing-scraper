@@ -5,7 +5,7 @@ node_modules/
 .env
 
 # Ignore database files
-db/listings.db
+db/app.db
 
 # Ignore IDE and editor files
 .vscode/
