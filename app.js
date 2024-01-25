@@ -8,14 +8,6 @@ dotenv.config();
 
 const formatDate = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
 
-const createListing = (count, title, price, link, dateRetrieved) => ({
-  count,
-  title,
-  price,
-  link,
-  dateRetrieved,
-});
-
 const createEmailHtml = (newListing) => {
   let listing = '';
   listing += `<h2>${newListing.title}</h2>`;
@@ -38,15 +30,13 @@ async function scrapeCraigslist() {
       const $ = cheerio.load(response.data);
 
       $('li').each((index, element) => {
-        const count = index;
         const title = $(element).find('.title').text();
         const price = $(element).find('.price').text();
         const dateRetrieved = formatDate(runTime);
         const link = $(element).find('a').attr('href');
-        const listing = createListing(count, title, price, link, dateRetrieved);
 
         if (title !== '') {
-          db.insertListing(count, title, price, link, dateRetrieved);
+          db.insertItem(title, price, link, dateRetrieved);
         }
       });
     } catch (error) {
@@ -54,19 +44,19 @@ async function scrapeCraigslist() {
     }
   }
 
-  const newListings = await db.getNewListings();
+  const newItems = await db.getNewItems();
 
-  if (newListings.length > 0) {
-    console.log('printing new listings');
-    console.log(newListings);
+  if (newItems.length > 0) {
+    console.log('printing new items');
+    console.log(newItems);
 
-    let listingsEmail = newListings.map(createEmailHtml).join('');
+    let emailContent = newItems.map(createEmailHtml).join('');
 
-    newListings.forEach(async (newListing) => {
-      await db.setEmailSent(newListing.link);
+    newItems.forEach(async (newItem) => {
+      await db.setEmailSent(newItem.link);
     });
 
-    emailer.sendEmail(listingsEmail);
+    emailer.sendEmail(emailContent);
   }
 }
 
