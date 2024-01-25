@@ -4,8 +4,7 @@ const { openDb } = require('../db/db');
 // Create a new job in the database
 async function createJob(title, link, ownerId) {
   const db = await openDb();
-  const query =
-    'INSERT OR IGNORE INTO job(title,link,owner_id) VALUES (?, ?, ?)';
+  const query = `INSERT OR IGNORE INTO job(title,link,owner_id,start_date) VALUES (?, ?, ?, DATETIME('now'))`;
   const params = [title, link, ownerId];
 
   try {
@@ -56,9 +55,30 @@ async function updateLastRuntime(jobId) {
   }
 }
 
+//get jobs that need to be run
+async function getJobsToRun() {
+  const db = await openDb();
+  const query = `SELECT id FROM (
+    SELECT *,
+      CASE
+        WHEN CAST((julianday(DATETIME('now')) - julianday(last_runtime)) * 24 * 60 as INTEGER) < interval OR julianday(DATETIME('now')) < julianday(start_date) THEN 0
+        ELSE 1
+      END as 'to_run'
+    FROM job
+  )
+  WHERE to_run = 1`;
+  try {
+    const data = await db.all(query);
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 module.exports = {
   createJob,
   getAllJobs,
   getEmailsForJob,
   updateLastRuntime,
+  getJobsToRun,
 };
