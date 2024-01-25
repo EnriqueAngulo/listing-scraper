@@ -2,11 +2,10 @@
 const { openDb } = require('../db/db');
 
 // Insert a new job item into the database
-async function insertItem(title, price, link, dateRetrieved) {
+async function insertItem(title, price, link) {
   const db = await openDb();
-  const query =
-    'INSERT OR IGNORE INTO job_items(title,price,link,dateRetrieved) VALUES (?, ?, ?, ?)';
-  const params = [title, price, link, dateRetrieved];
+  const query = `INSERT OR IGNORE INTO job_items(title,price,link,dateRetrieved) VALUES (?, ?, ?, DATETIME('now'))`;
+  const params = [title, price, link];
 
   try {
     await db.run(query, ...params);
