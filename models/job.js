@@ -45,8 +45,8 @@ async function getEmailsForJob(jobId) {
 async function updateLastRuntime(jobId) {
   const runTime = new Date();
   const db = await openDb();
-  const query = 'UPDATE job SET last_runtime = ? WHERE id = ?';
-  const params = [runTime, jobId];
+  const query = `UPDATE job SET last_runtime = DATETIME('now') WHERE id = ?`;
+  const params = [jobId];
 
   try {
     await db.run(query, ...params);
@@ -58,7 +58,7 @@ async function updateLastRuntime(jobId) {
 //get jobs that need to be run
 async function getJobsToRun() {
   const db = await openDb();
-  const query = `SELECT id FROM (
+  const query = `SELECT id, title, link FROM (
     SELECT *,
       CASE
         WHEN CAST((julianday(DATETIME('now')) - julianday(last_runtime)) * 24 * 60 as INTEGER) < interval OR julianday(DATETIME('now')) < julianday(start_date) THEN 0
