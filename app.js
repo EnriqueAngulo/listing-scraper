@@ -1,25 +1,22 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const db = require('./db/db');
-const emailer = require('./lib/emailer');
-
-//import models
-const jobModel = require('./models/job');
-const jobItemModel = require('./models/jobItem');
-
 const dotenv = require('dotenv');
 dotenv.config();
 
+// Import models
+const jobModel = require('./models/job');
+const jobItemModel = require('./models/jobItem');
+
+const emailer = require('./lib/emailer');
+
 const formatDate = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
 
-const createEmailHtml = (newListing) => {
-  let listing = '';
-  listing += `<h2>${newListing.title}</h2>`;
-  listing += `<p>Price: ${newListing.price}</p>`;
-  listing += `<a href="${newListing.link}">View Listing</a>`;
-  listing += `<hr>`;
-  return listing;
-};
+const createEmailHtml = (newListing) => `
+  <h2>${newListing.title}</h2>
+  <p>Price: ${newListing.price}</p>
+  <a href="${newListing.link}">View Listing</a>
+  <hr>
+`;
 
 async function getItemsFromPage(job, emailList) {
   const runTime = new Date();
@@ -57,44 +54,40 @@ async function getItemsFromPage(job, emailList) {
   const newItems = await jobItemModel.getNewItems(job.id);
 
   if (newItems.length > 0) {
-    console.log('printing new items');
-    console.log(newItems);
+    console.log(`found ${newItems.length} new items for job ${job.title}`);
 
-    let emailContent = newItems.map(createEmailHtml).join('');
+    const emailContent = newItems.map(createEmailHtml).join('');
 
-    newItems.forEach(async (newItem) => {
-      await jobItemModel.setEmailSent(newItem.id);
-    });
+    let emailSent = await emailer.sendEmail(job.title, emailContent, emailList);
 
-    emailer.sendEmail(job.title, emailContent, emailList);
+    if (emailSent) {
+      await Promise.all(
+        newItems.map((newItem) => jobItemModel.setEmailSent(newItem.id))
+      );
+    }
   } else {
     console.log(`no new items for job ${job.title}`);
   }
 }
 
-//function to run jobs
+// Function to run jobs
 async function runJobs() {
   console.log('checking for jobs to run');
   const jobs = await jobModel.getJobsToRun();
 
   if (jobs.length > 0) {
-    for (const job of jobs) {
+    const jobPromises = jobs.map(async (job) => {
       console.log(`running job '${job.title}'`);
-      console.log(job);
-      //get email addresses for job
-      const emails = await jobModel.getEmailsForJob(job.id);
-      let emailList = [];
 
-      for (const email of emails) {
-        emailList.push(email.email);
-      }
-      console.log('email list for job');
-      console.log(emailList);
+      const emails = await jobModel.getEmailsForJob(job.id);
+      const emailList = emails.map((email) => email.email);
 
       await getItemsFromPage(job, emailList);
 
       await jobModel.updateLastRuntime(job.id);
-    }
+    });
+
+    await Promise.all(jobPromises);
   } else {
     console.log('no jobs to run');
   }
