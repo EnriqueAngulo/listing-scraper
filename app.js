@@ -67,9 +67,12 @@ async function getItemsFromPage(job, emailList) {
     });
 
     emailer.sendEmail(job.title, emailContent, emailList);
+  } else {
+    console.log(`no new items for job ${job.title}`);
   }
 }
 
+//function to run jobs
 async function runJobs() {
   console.log('checking for jobs to run');
   const jobs = await jobModel.getJobsToRun();
