@@ -2,10 +2,10 @@
 const { openDb } = require('../db/db');
 
 // Insert a new job item into the database
-async function insertItem(title, price, link) {
+async function insertItem(jobId, title, price, link) {
   const db = await openDb();
-  const query = `INSERT OR IGNORE INTO job_items(title,price,link,dateRetrieved) VALUES (?, ?, ?, DATETIME('now'))`;
-  const params = [title, price, link];
+  const query = `INSERT OR IGNORE INTO job_items(job_id,title,price,link,dateRetrieved) VALUES (?,?, ?, ?, DATETIME('now'))`;
+  const params = [jobId, title, price, link];
 
   try {
     await db.run(query, ...params);
@@ -29,10 +29,10 @@ async function getNewItems(jobId) {
 }
 
 // Set emailSent to 1 for a specific job item
-async function setEmailSent(link) {
+async function setEmailSent(id) {
   const db = await openDb();
-  const query = 'UPDATE job_items SET emailSent = 1 WHERE link = ?';
-  const params = [link];
+  const query = 'UPDATE job_items SET emailSent = 1 WHERE id = ?';
+  const params = [id];
 
   try {
     await db.run(query, ...params);
