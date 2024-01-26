@@ -3,11 +3,16 @@ const open = require('sqlite').open;
 const dotenv = require('dotenv');
 dotenv.config();
 
+let db;
+
 async function openDb() {
-  return open({
-    filename: process.env.DB_PATH,
-    driver: sqlite3.Database,
-  });
+  if (!db) {
+    db = await open({
+      filename: process.env.DB_PATH,
+      driver: sqlite3.Database,
+    });
+  }
+  return db;
 }
 
 module.exports = {
