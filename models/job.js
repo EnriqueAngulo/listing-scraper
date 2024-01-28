@@ -43,7 +43,6 @@ async function getEmailsForJob(jobId) {
 
 // Update last_runtime column for a job
 async function updateLastRuntime(jobId) {
-  const runTime = new Date();
   const db = await openDb();
   const query = `UPDATE job SET last_runtime = DATETIME('now') WHERE id = ?`;
   const params = [jobId];
