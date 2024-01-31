@@ -92,5 +92,6 @@ async function runJobs() {
     console.log('no jobs to run');
   }
 }
-
 runJobs();
+
+setInterval(runJobs, 1000 * 60);
