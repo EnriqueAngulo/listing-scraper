@@ -72,7 +72,9 @@ async function getItemsFromPage(job, emailList) {
 
 // Function to run jobs
 async function runJobs() {
-  console.log('checking for jobs to run');
+  const currentTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+  console.log(`[${currentTime}]: checking for jobs to run`);
   const jobs = await jobModel.getJobsToRun();
 
   if (jobs.length > 0) {
