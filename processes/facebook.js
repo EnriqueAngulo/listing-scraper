@@ -1,9 +1,12 @@
 const puppeteer = require('puppeteer');
+const dotenv = require('dotenv');
+dotenv.config();
 
 //scrape facebook marketplace url for items using puppeteer
 async function getItemsFromPage(link, runTime) {
   const browser = await puppeteer.launch({
     headless: 'new',
+    executablePath: process.env.CHROME_BIN || null,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
